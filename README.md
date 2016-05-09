@@ -19,9 +19,12 @@ Is implemented too the fmincg function in order to calculate the optimal theta c
 Author: Alonso Vidales <alonso.vidales@tras2.es>
 
 Changes: 
+
 	- Improved Normalize function (now is based on standard deviation)
 	- Improved MapFeatures function
 	- InitializeTheta is renamed to Initalize function. This function has option for Normalize data.
+
+Author: Richard Malaschitz <malaschitz@gmail.com>	
 
 Use of this source code is governed by a BSD-style. These programs and documents are distributed without any warranty, express or implied. All use of these programs is entirely at the user's own risk.
 
