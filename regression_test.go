@@ -1,8 +1,8 @@
 package ml
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 // Using a predefined dataset stored in test_data/test_linear.dat , calculate
@@ -59,7 +59,7 @@ func TestCalculateOptimumTheta(t *testing.T) {
 
 	// Data obtained from the "Andrew Ng" machine learning course from Coursera
 	// https://www.coursera.org/course/ml
-	data := &Regression {
+	data := &Regression{
 		LinearReg: true,
 		X: [][]float64{
 			[]float64{1.0000, -15.9368},
@@ -77,7 +77,7 @@ func TestCalculateOptimumTheta(t *testing.T) {
 		},
 		Y: []float64{
 			2.1343,
-		        1.1733,
+			1.1733,
 			34.3591,
 			36.8380,
 			2.8090,
@@ -90,7 +90,7 @@ func TestCalculateOptimumTheta(t *testing.T) {
 			22.7524,
 		},
 	}
-	data.InitializeTheta()
+	data.Initialize()
 
 	Fmincg(data, 0.0, 10, true)
 	j, _, _ := data.CostFunction(0.0, false)
@@ -107,7 +107,7 @@ func TestLogisticHipotesis(t *testing.T) {
 	fmt.Println("Testing Logistic Regression Hipotesis...")
 
 	data := &Regression{
-		Theta: []float64{-25.161272, 0.206233, 0.201470},
+		Theta:     []float64{-25.161272, 0.206233, 0.201470},
 		LinearReg: false,
 	}
 	h := data.LogisticHipotesis([]float64{1, 45, 85})
@@ -124,7 +124,7 @@ func TestCalculateOptimumDataLogRegWithPrepare(t *testing.T) {
 	// https://www.coursera.org/course/ml
 	data := LoadFile("test_data/data_pol.txt")
 	data.LinearReg = false
-	data.InitializeTheta()
+	data.Initialize()
 	Fmincg(data, 1.0, 200, true)
 	j, _, _ := data.CostFunction(1, false)
 

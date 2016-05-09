@@ -29,83 +29,72 @@ import (
 // applied to all the elements is: (Xn - Avg) / (max - min) If all the elements
 // in the slice have the same values, or the slice is empty, the slice can't be
 // normalized, then returns false in the valid parameter
-func Normalize(values []float64) (norm []float64, valid bool) {
-	avg := 0.0
-	max := math.Inf(-1)
-	min := math.Inf(1)
-	math.Inf(1)
+func Normalize(values []float64) (norm []float64, mean float64, stddev float64) {
+	mean, stddev = stdDevF(values)
 	for _, val := range values {
-		avg += val
-		if val < min {
-			min = val
-		}
-		if val > max {
-			max = val
-		}
+		norm = append(norm, (val-mean)/stddev)
 	}
-
-	if max == min || len(values) == 0 {
-		valid = false
-		return
-	}
-
-	valid = true
-	avg /= float64(len(values))
-	for _, val := range values {
-		norm = append(norm, (val-avg)/(max-min))
-	}
-
 	return
 }
 
-// MapFeatures This method calculates all the possible combinations of the
-// features and returns them with the specified degree, for example, for a
-// data.X with x1, x2 and degree 2 will convert data.X to
-// 1, x1, x2, x1 * x2, x1 ** 2, x2 ** 2, (x1 * x2) ** 2
-// Use this method with care in order to calculate the model who fits better with
-// the problem
-func MapFeatures(x [][]float64, degree int) (ret [][]float64) {
-	ret = make([][]float64, len(x))
-	elems := len(x[0])
-	for i := 0; i < len(x); i++ {
-		aux := make([]float64, len(x[i]))
-		copy(aux, x[i])
-		ret[i] = make([]float64, len(x[i]))
-		copy(ret[i], x[i])
-
-		for l := 2; l <= elems; l++ {
-			x[i] = append(x[i], combinations(aux, l)...)
-		}
+func stdDevF(numbers []float64) (float64, float64) {
+	total := 0.0
+	for _, number := range numbers {
+		total += number
 	}
-
-	ret = PrepareX(x, degree)
-
-	return
+	mean := total / float64(len(numbers))
+	total = 0.0
+	for _, number := range numbers {
+		total += math.Pow(number-mean, 2)
+	}
+	variance := total / float64(len(numbers)-1)
+	return mean, math.Sqrt(variance)
 }
 
-// PrepareX Retrns the x matrix with all the elements at the power of
+// MapFeatures Retrrns the x matrix with all the elements at the power of
 // x, x-1, x-2, ... 1 and adds at the being of each row a 1 in order to be used
 // as bias value.
 // For example for a given matrix like:
-//    3 4
-//    5 8
-// Prepared at the power of 2 (x = 2):
-//    1 3  9 4 16
-//    1 5 25 8 64
-func PrepareX(x [][]float64, degree int) (newX [][]float64) {
+//    2 3 5
+//	  10 11 12
+// Prepared at the power of 2:
+//    1 2 3 5 4 6 10 9 15 25
+//	  1 10 11 12 100 110 120 121 132 144
+// Prepared at the power of 3:
+//    1 2 3 5 4 6 10 9 15 25 8 12 20 18 30 50 27 45 75 125
+//	  1 10 11 12 100 110 120 121 132 144 1000 1100 1200 1210 1320 1440 1331 1452 1584 1728
+
+func MapFeatures(x [][]float64, degree int) (newX [][]float64) {
 	for _, values := range x {
-		result := []float64{1}
-
-		for _, value := range values {
-			for calcDeg := 1; calcDeg <= degree; calcDeg++ {
-				result = append(result, math.Pow(value, float64(calcDeg)))
-			}
+		x := []float64{1.0}
+		for i := 0; i < degree; i++ {
+			result := make([]float64, 0)
+			combinations(0, make([]int, i+1), values, &result)
+			x = append(x, result...)
 		}
-
-		newX = append(newX, result)
+		newX = append(newX, x)
 	}
 
 	return
+}
+
+func combinations(pos int, p []int, a []float64, result *[]float64) {
+	start := 0
+	if pos > 0 {
+		start = p[pos-1]
+	}
+	for i := start; i < len(a); i++ {
+		p[pos] = i
+		if pos == len(p)-1 { //end of game
+			v := 1.0
+			for j := 0; j < len(p); j++ {
+				v *= a[p[j]]
+			}
+			*result = append(*result, v)
+		} else {
+			combinations(pos+1, p, a, result)
+		}
+	}
 }
 
 // multElems returns the result of multiply all the elements contained on the
@@ -114,49 +103,6 @@ func multElems(elems []float64) (resilt float64) {
 	resilt = 1
 	for _, elem := range elems {
 		resilt *= elem
-	}
-
-	return
-}
-
-// combinations Returns a slice with all the possible combinations of lenght "r"
-// of the elements contained in the slice "iterable"
-func combinations(iterable []float64, r int) (results []float64) {
-	pool := iterable
-	n := len(pool)
-
-	if r > n {
-		return
-	}
-
-	indices := make([]int, r)
-	for i := range indices {
-		indices[i] = i
-	}
-
-	result := make([]float64, r)
-	for i, el := range indices {
-		result[i] = pool[el]
-	}
-
-	results = append(results, multElems(result))
-	for {
-		i := r - 1
-		for ; i >= 0 && indices[i] == i+n-r; i-- {}
-
-		if i < 0 {
-			return
-		}
-
-		indices[i]++
-		for j := i + 1; j < r; j++ {
-			indices[j] = indices[j-1] + 1
-		}
-
-		for ; i < len(indices); i++ {
-			result[i] = pool[indices[i]]
-		}
-		results = append(results, multElems(result))
 	}
 
 	return
